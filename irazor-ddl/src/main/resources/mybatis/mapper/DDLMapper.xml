@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+      http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<mapper namespace="com.irazor.ddl.dao.DDLMapper" >
+
+  <resultMap id="OracleMeta" type="com.irazor.ddl.entity.OracleMeta" >
+        <result column="TABLE_NAME" property="tableName" jdbcType="VARCHAR" />
+        <result column="INITSQL" property="ddl" jdbcType="VARCHAR" />
+    </resultMap>
+
+ <select id="testQuery" resultType="java.lang.Integer" >
+    select 1 from dual
+  </select>
+  
+  <select id="fetchOracleDDL" resultMap="OracleMeta">
+   		<![CDATA[
+    SELECT TABLE_NAME, DBMS_METADATA.GET_DDL('TABLE',TABLE_NAME) AS INITSQL
+		FROM 
+		  ( SELECT DISTINCT A.TABLE_NAME 
+		  FROM USER_CONS_COLUMNS CU, 
+		    USER_CONSTRAINTS AU, 
+		    USER_TABLES A 
+		  WHERE CU.CONSTRAINT_NAME = AU.CONSTRAINT_NAME 
+		  AND CU.TABLE_NAME        = A.TABLE_NAME
+		  )
+		   ]]>
+  </select>  
+  
+  <select id="fetchOracleDDLByTableName" resultMap="OracleMeta" >
+   		<![CDATA[
+    SELECT TABLE_NAME, DBMS_METADATA.GET_DDL('TABLE',TABLE_NAME) AS INITSQL
+		FROM 
+		  ( SELECT DISTINCT A.TABLE_NAME 
+		  FROM USER_CONS_COLUMNS CU, 
+		    USER_CONSTRAINTS AU, 
+		    USER_TABLES A 
+		  WHERE CU.CONSTRAINT_NAME = AU.CONSTRAINT_NAME 
+		  AND CU.TABLE_NAME        = A.TABLE_NAME 
+		  AND A.TABLE_NAME LIKE #{tableName}
+		  )
+		   ]]>
+  </select>
+  
+  <select id="callGenDDLSettingPretty" statementType="CALLABLE" >
+  	{CALL   DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'PRETTY', TRUE)}  		
+  </select>
+  <select id="callGenDDLSettingTerminator" statementType="CALLABLE" >
+  	{CALL  DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'SQLTERMINATOR', TRUE)}  		
+  </select>
+  <select id="callGenDDLSettingConstraints" statementType="CALLABLE" >
+  	{CALL  DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'CONSTRAINTS', TRUE)}
+  </select>
+  <select id="callGenDDLSettingRefConstraints" statementType="CALLABLE" >
+  	{CALL  DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'REF_CONSTRAINTS', FALSE)}		
+  </select>
+  <select id="callGenDDLSettingAsAlter" statementType="CALLABLE" >
+  	{CALL  DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'CONSTRAINTS_AS_ALTER', FALSE)}		
+  </select>
+  <select id="callGenDDLSettingStorage" statementType="CALLABLE" >
+  	{CALL  DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'STORAGE', FALSE)}	
+  </select>  
+  <select id="callGenDDLSettingTablespace" statementType="CALLABLE" >
+  	{CALL  DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'TABLESPACE', FALSE)}
+  </select>  
+  <select id="callGenDDLSettingSegment" statementType="CALLABLE" >
+  	{CALL  DBMS_METADATA.set_transform_param(DBMS_METADATA.session_transform, 'SEGMENT_ATTRIBUTES', FALSE)}
+  </select>  
+  
+</mapper>
